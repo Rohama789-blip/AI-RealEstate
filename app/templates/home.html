@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block hero %}
+<section class="hero">
+  <div class="wrap">
+    <h1>Find the right home at the right price</h1>
+    <p>Search listings, check what a property is really worth, and get answers from an AI advisor.</p>
+    <form class="search" action="/recommend" method="get">
+      <label>Location<select name="location"><option>Any</option>{% for l in locations %}<option>{{ l }}</option>{% endfor %}</select></label>
+      <label>Max budget ($)<input type="number" name="budget" value="250000" min="10000" step="5000"></label>
+      <label>Bedrooms<select name="bedrooms"><option value="0">Any</option>{% for n in range(1,7) %}<option value="{{ n }}">{{ n }}+</option>{% endfor %}</select></label>
+      <button class="btn accent">Search properties</button>
+    </form>
+  </div>
+  <svg class="skyline" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 120V70h60V40h50v30h40V55h70V25h45v45h60V50h50v-20h40v40h70V60h60V35h55v35h60V55h80V30h45v40h55V65h70V45h60v25h60V60h45v60z" fill="#F3F5F9"/></svg>
+</section>
+{% endblock %}
+{% block content %}
+<section class="facts">
+  <div><b>{{ "{:,}".format(stats.listings) }}</b><span>properties analysed</span></div>
+  <div><b>${{ "{:,}".format(stats.avg_price) }}</b><span>average price</span></div>
+  <div><b>{{ stats.locations }}</b><span>locations covered</span></div>
+  {% if m.best_model %}<div><b>{{ m.results[m.best_model].R2 }}</b><span>model accuracy (R²)</span></div>{% endif %}
+</section>
+<section class="tiles">
+  <a class="tile" href="/recommend"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span><h2>Find properties</h2><p>Set a budget and preferences. Every match explains why it was chosen.</p></a>
+  <a class="tile" href="/predict"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span><h2>Price estimate</h2><p>Describe a property and get a predicted price with a likely range.</p></a>
+  <a class="tile" href="/chat"><span class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/></svg></span><h2>Ask the advisor</h2><p>Get answers on buying, legal checks, and investing from trusted documents.</p></a>
+</section>
+{% endblock %}

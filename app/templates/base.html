@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EstateIQ{% block title %}{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="EstateIQ home">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#F0662B"/><path d="M7 16 16 8l9 8v9h-6v-6h-6v6H7z" fill="#fff"/></svg>
+      EstateIQ
+    </a>
+    <nav>
+      <a href="/recommend" class="{{ 'on' if page=='recommend' }}">Find properties</a>
+      <a href="/predict" class="{{ 'on' if page=='predict' }}">Price estimate</a>
+      <a href="/chat" class="{{ 'on' if page=='chat' }}">Ask the advisor</a>
+    </nav>
+  </div>
+</header>
+{% block hero %}{% endblock %}
+<main class="wrap">{% block content %}{% endblock %}</main>
+<footer><div class="wrap">© EstateIQ. AI-powered property insights.</div></footer>
+{% block script %}{% endblock %}
+</body>
+</html>

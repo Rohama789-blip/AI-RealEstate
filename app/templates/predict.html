@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %} - Price estimate{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>Property price estimate</h1><p>Enter the property details to see its estimated market value.</p></div>
+<div class="split">
+<form id="f" class="panel grid">
+  <label>Location<select name="location">{% for l in locations %}<option>{{ l }}</option>{% endfor %}</select></label>
+  <label>Property type<select name="property_type">{% for t in types %}<option>{{ t }}</option>{% endfor %}</select></label>
+  <label>Area (sq ft)<input type="number" name="area_sqft" value="1500" min="250" max="9000" required></label>
+  <label>Age (years)<input type="number" name="age_years" value="10" min="0" max="100" required></label>
+  <label>Bedrooms<input type="number" name="bedrooms" value="3" min="1" max="10" required></label>
+  <label>Bathrooms<input type="number" name="bathrooms" value="2" min="1" max="10" required></label>
+  <label>Parking spaces<input type="number" name="parking" value="1" min="0" max="10" required></label>
+  <label>Garden<select name="garden"><option value="0">No</option><option value="1">Yes</option></select></label>
+  <button class="btn accent wide">Get estimate</button>
+</form>
+<section id="out" class="panel result" aria-live="polite"><p class="muted">Your estimate will appear here.</p></section>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+const f = document.getElementById("f"), out = document.getElementById("out");
+const money = n => "$" + Math.round(n).toLocaleString();
+f.addEventListener("submit", async e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(f));
+  for (const k of ["area_sqft","age_years","bedrooms","bathrooms","parking","garden"]) d[k] = Number(d[k]);
+  out.innerHTML = '<p class="muted">Estimating…</p>';
+  const r = await fetch("/api/predict", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(d)});
+  if (!r.ok) { out.innerHTML = '<p class="err">Check the values and try again.</p>'; return; }
+  const p = await r.json();
+  const diff = (p.price_per_sqft / p.area_avg_price_per_sqft - 1) * 100;
+  const chip = Math.abs(diff) < 3 ? '<span class="chip">In line with the area</span>'
+    : diff > 0 ? `<span class="chip up">${diff.toFixed(0)}% above area average</span>` : `<span class="chip down">${Math.abs(diff).toFixed(0)}% below area average</span>`;
+  out.innerHTML = `<p class="muted">Estimated value</p><p class="big">${money(p.predicted_price)}</p>${chip}
+    <div class="range"><div><span>Low</span><b>${money(p.range_low)}</b></div><div class="bar"></div><div><span>High</span><b>${money(p.range_high)}</b></div></div>
+    <p class="muted">$${p.price_per_sqft}/sq ft here, compared with $${p.area_avg_price_per_sqft}/sq ft on average in ${d.location}.</p>`;
+});
+</script>
+{% endblock %}

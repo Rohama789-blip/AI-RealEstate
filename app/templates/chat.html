@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %} - Ask the advisor{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>Ask the advisor</h1><p>Answers come from market data and the documents in the knowledge base.</p></div>
+<div class="panel chat">
+  <div class="chathead"><span class="avatar">AI</span><div><b>EstateIQ Advisor</b><span class="muted small">Buying, legal checks, investing, areas</span></div></div>
+  <div id="log" aria-live="polite">
+    <div class="msg bot">Hi, I can help with buying steps, legal checks, investing, and area comparisons. What would you like to know?</div>
+  </div>
+  <div class="suggest">
+    <button type="button">What documents do I need to verify before buying?</button>
+    <button type="button">Which area has the highest price per sq ft?</button>
+    <button type="button">How is rental yield calculated?</button>
+  </div>
+  <form id="f"><input id="q" placeholder="Ask a question" autocomplete="off" required><button class="btn accent">Send</button></form>
+</div>
+<form id="up" class="panel upload">
+  <label>Add a document to the knowledge base (.pdf, .txt, .md)<input type="file" name="file" accept=".pdf,.txt,.md" required></label>
+  <button class="btn ghost">Upload and index</button><span id="upmsg" class="muted"></span>
+</form>
+{% endblock %}
+{% block script %}
+<script>
+const log = document.getElementById("log"), f = document.getElementById("f"), q = document.getElementById("q");
+let history = [];
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function add(cls, html) { const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+async function send(text) {
+  add("me", esc(text)); const wait = add("bot", "Thinking…");
+  const r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({message:text, history})});
+  const d = await r.json();
+  const body = esc(d.answer).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
+  wait.innerHTML = body + (d.sources.length ? `<div class="src">Sources: ${d.sources.join(", ")}</div>` : "");
+  history.push({role:"user", content:text}, {role:"assistant", content:d.answer});
+}
+f.addEventListener("submit", e => { e.preventDefault(); const t = q.value.trim(); if (t) { q.value = ""; send(t); } });
+document.querySelectorAll(".suggest button").forEach(b => b.onclick = () => send(b.textContent));
+document.getElementById("up").addEventListener("submit", async e => {
+  e.preventDefault(); const m = document.getElementById("upmsg"); m.textContent = "Indexing…";
+  const r = await fetch("/api/upload-doc", {method:"POST", body:new FormData(e.target)});
+  const d = await r.json(); m.textContent = r.ok ? `Indexed. ${d.chunks} passages available.` : (d.detail || "Upload failed.");
+});
+</script>
+{% endblock %}
